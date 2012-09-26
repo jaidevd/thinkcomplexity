@@ -1,0 +1,59 @@
+import numpy as np
+from schelling_enact import SchellingModel
+
+x = np.zeros((100,100))
+
+red_sites = []
+
+for i in range(4500):
+    coords = (np.random.randint(0,100),np.random.randint(0,100))
+    red_sites.append(coords)
+
+blue_sites = []
+site_count = 0
+
+while site_count < 4500:
+    coords = (np.random.randint(0,100),np.random.randint(0,100))
+    if coords not in red_sites:
+        blue_sites.append(coords)
+        site_count += 1
+
+#blue_sites, red_sites = map(np.array, [blue_sites, red_sites])
+
+for a,b in red_sites:
+    x[a,b] = 1
+for a,b in blue_sites:
+    x[a,b] = -1
+
+all_agents = red_sites
+for agent in blue_sites:
+    all_agents.append(agent)
+
+sm = SchellingModel(x, all_agents)
+cnt = 0
+
+enamldef Main(MainWindow):
+    attr schelling = sm
+    Container:
+        EnableCanvas:
+            component << schelling.plot
+        Form:
+            PushButton:
+                text = 'Run'
+                clicked ::
+                    #schelling.run_simulation()
+                    # my own tentative script:
+                    for a in range(schelling.x.shape[0]):
+                        for b in range(schelling.x.shape[1]):
+                            if schelling.x[a,b]!=0.0:
+                                if not schelling.ishappy((a,b)):
+                                    schelling.move_to_empty_cell((a,b))
+                    schelling.plotdata.set_data('imagedata',schelling.x)
+                    schelling.sim_count += 1
+                    
+            PushButton:
+                text = 'Check'
+                clicked ::
+                    print schelling.check_allhappy()
+                    print len(schelling.x[schelling.x==1.0])
+                    print len(schelling.x[schelling.x==-1.0])
